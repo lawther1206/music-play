@@ -1,12 +1,12 @@
 <template>
     <el-card class="music-card">
-        <div class="del-icon"></div>
         <div class="music-card-content">
-            <div class="left">
+            <div class="del-icon" @click="cardClose" v-show="isCard">×</div>
+            <div class="left" @click="cardShow">
                 <el-image :class="{ paused: !state.isStop }" class="left-img"
                     :src="songs[state.currentSongIndex].preview"></el-image>
             </div>
-            <div class="right">
+            <div class="right" v-show="isCard">
                 <div class="right-title">
                     {{ songs[state.currentSongIndex].name }}
                 </div>
@@ -34,7 +34,7 @@
     </el-card>
 </template>
 <script setup>
-import { reactive, ref, onMounted,  } from "vue";
+import { reactive, ref, onMounted, } from "vue";
 
 const songs = ref([{
     key: "haqs",
@@ -52,6 +52,7 @@ const songs = ref([{
 
 // 播放器DOM
 const audioTag = ref(null);
+const isCard = ref(true)
 
 const state = reactive({
     // 当前歌曲
@@ -87,7 +88,7 @@ const pause = () => {
 
 const rewindSong = () => {
     state.currentSongIndex = (state.currentSongIndex - 1) % songs.value.length;
-   if(state.currentSongIndex <0) state.currentSongIndex =0;
+    if (state.currentSongIndex < 0) state.currentSongIndex = 0;
     playCurrentTrack();
 };
 
@@ -117,16 +118,25 @@ const secondsToMinutes = (seconds) => {
     return `${formattedMinutes}:${formattedSeconds}`;
 };
 
-const init = async() => {
-    for(let i=0;i<songs.value.length;i++){
-        let el =songs.value[i];
+const cardClose = () => {
+    isCard.value = false
+}
+
+const cardShow = () => {
+    if (!isCard.value) isCard.value = true
+}
+
+const init = async () => {
+    for (let i = 0; i < songs.value.length; i++) {
+        let el = songs.value[i];
         let mp3 = await import(`../../assets/audio/${el.key}.mp3`)
-         el.url= mp3.default
-         let preview = await import(`../../assets/image/${el.key}.jpg`)
-         el.preview= preview.default
+        el.url = mp3.default
+        let preview = await import(`../../assets/image/${el.key}.jpg`)
+        el.preview = preview.default
     }
     audioTag.value.src = songs.value[state.currentSongIndex].url;
 }
+
 
 onMounted(() => {
     init()
@@ -135,32 +145,36 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .music-card {
-    width: 320px;
-
-    .del-icon {
-        position: relative;
-    }
-
+    position: fixed;
+    bottom: 1rem;
+    display: inline-block;
     .music-card-content {
+        position: relative;
         display: flex;
-        width: 300px;
-
+        .del-icon {
+            position: absolute;
+            right: -10px;
+            top: -18px;
+            cursor: pointer;
+            font-weight: 600;
+            &:hover {
+                color: #409EFF;
+            }
+        }
         .left {
-            width: 110px;
-
+            width: 90px;
+            cursor: pointer;
             .left-img {
-                width: 100px;
-                height: 100px;
+                width: 80px;
+                height: 80px;
                 border-radius: 50%;
             }
         }
-
         .right {
-            width: 180px;
+            width: 150px;
             display: flex;
             flex-flow: column;
             justify-content: space-evenly;
-
             :deep(.el-slider__button-wrapper) {
                 display: none;
             }
@@ -170,30 +184,28 @@ onMounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 width: 100%;
-                margin-left: 5px;
+                display: flex;
+                justify-content: center;
             }
 
             .right-silde {
                 display: flex;
                 align-items: center;
-
                 .right-silde-start {
-                    margin: 5px;
+                    margin: 10px 5px;
                 }
-
                 .right-silde-end {
-                    margin: 5px;
+                    margin:10px 5px;
                 }
             }
-
             .btn-list {
                 display: flex;
+                justify-content: center;
                 font-size: 22px;
-                margin-left: 15px;
-
+                margin-left: 5px;
                 .btn-item {
                     cursor: pointer;
-                    margin-right: 20px;
+                    margin-right: 10px;
                 }
             }
         }
