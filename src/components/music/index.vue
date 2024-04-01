@@ -37,7 +37,8 @@ const vDrag = {
 		const moveDOm = el.getElementsByClassName('left-img')[0];
 		let x = 0; // 记录元素拖拽时的初始 x 轴位置
 		let y = 0; // 记录元素拖拽时的初始 y 轴位置
-
+		// 初始化位置
+		el.style.transform = 'translate(12px, 80vh)';
 		// 移动端触摸事件处理
 		moveDOm.ontouchstart = function (event) {
 			// 如果是移动端触摸事件，记录触摸点与元素左上角的偏移量
