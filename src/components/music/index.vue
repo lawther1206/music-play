@@ -70,6 +70,11 @@ const vDrag = {
 		el.addEventListener('mousedown', handleMouseDown);
 		document.addEventListener('mousemove', handleMouseMove);
 		document.addEventListener('mouseup', handleMouseUp);
+
+
+		el.addEventListener('touchstart', handleMouseDown);
+		document.addEventListener('touchmove', handleMouseMove);
+		document.addEventListener('touchend', handleMouseUp);
 	},
 	// 在指令解绑时，移除事件监听器
 	unmounted(el) {
