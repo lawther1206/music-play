@@ -31,60 +31,61 @@
 </template>
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
-
 const vDrag = {
-	mounted(el, bind) {
-		let offsetX = 0;
-		let offsetY = 0;
-		let isDragging = false;
-		let minX = 0;
-		let minY = 0;
-		let maxX = window.innerWidth - el.offsetWidth;
-		let maxY = window.innerHeight - el.offsetHeight;
-		// 初始化元素位置
-		const initX = bind.value.initX ?? '0px'
-		const initY = bind.value.initY ?? '0px'
-		el.style.transform = `translate(${initX}, ${initY})`;
-		const handleMouseDown = (event) => {
-			isDragging = true;
-			offsetX = event.clientX - el.getBoundingClientRect().left;
-			offsetY = event.clientY - el.getBoundingClientRect().top;
+	// 在绑定元素的父组件
+	// 及他自己的所有子节点都挂载完成后调用
+	mounted(el) {
+		const moveDOm = el.getElementsByClassName('left-img')[0];
+		// 确保元素只能在视口内拖拽
+		let maxLeft = document.documentElement.clientWidth - el.clientWidth;
+		let maxTop = document.documentElement.clientHeight - el.clientHeight;
+		// 鼠标事件
+		moveDOm.onmousedown = function (e) {
+			// 添加样式
 			el.classList.add('dragging');
-		};
-		const handleMouseMove = (event) => {
-			if (isDragging) {
-				let x = event.clientX - offsetX;
-				let y = event.clientY - offsetY;
-				// 边界检测
-				x = Math.max(minX, Math.min(x, maxX));
-				y = Math.max(minY, Math.min(y, maxY));
-				el.style.transform = `translate(${x}px, ${y}px)`;
-			}
-		};
-		const handleMouseUp = () => {
-			if (isDragging) {
-				isDragging = false;
+			// 鼠标按下，计算当前元素距离可视区的距离
+			let offsetX = e.clientX - el.offsetLeft;
+			let offsetY = e.clientY - el.offsetTop;
+			document.onmousemove = function (e) {
+				// 计算移动的距离
+				let moveX = e.clientX - offsetX;
+				let moveY = e.clientY - offsetY;
+				// 限制边界
+				moveX = Math.max(Math.min(moveX, maxLeft), 0);
+				moveY = Math.max(Math.min(moveY, maxTop), 0);
+				// 移动当前元素
+				el.style.left = moveX + 'px';
+				el.style.top = moveY + 'px';
+			};
+
+			document.onmouseup = function (e) {
 				el.classList.remove('dragging');
-			}
+				document.onmousemove = null;
+				document.onmouseup = null;
+			};
+			// 防止粘粘
+			return false;
 		};
-		el.addEventListener('mousedown', handleMouseDown);
-		document.addEventListener('mousemove', handleMouseMove);
-		document.addEventListener('mouseup', handleMouseUp);
+		// 移动端
+		moveDOm.ontouchstart = function (event) {
+			const { pageX, pageY } = event.touches[0];
+			let offsetX = pageX - el.offsetLeft;
+			let offsetY = pageY - el.offsetTop;
+			document.ontouchmove = function (e) {
+				// 移动距离
+				let left = e.touches[0].pageX - offsetX;
+				let top = e.touches[0].pageY - offsetY;
+				// 限制范围
+				left = Math.max(Math.min(left, maxLeft), 0);
+				top = Math.max(Math.min(top, maxTop), 0);
+				el.style.left = left + 'px';
+				el.style.top = top + 'px';
+			};
+		};
 
-
-		el.addEventListener('touchstart', handleMouseDown);
-		document.addEventListener('touchmove', handleMouseMove);
-		document.addEventListener('touchend', handleMouseUp);
-	},
-	// 在指令解绑时，移除事件监听器
-	unmounted(el) {
-		el.removeEventListener('mousedown', handleMouseDown);
-		document.removeEventListener('mousemove', handleMouseMove);
-		document.removeEventListener('mouseup', handleMouseUp);
-
-		el.removeEventListener('touchstart', handleMouseDown);
-		document.removeEventListener('touchmove', handleMouseMove);
-		document.removeEventListener('touchend', handleMouseUp);
+		el.ontouchend = function () {
+			document.ontouchmove = null;
+		};
 	},
 };
 
@@ -198,9 +199,12 @@ onMounted(() => {
 <style scoped lang="scss">
 .music-card {
 	position: fixed;
-	// bottom: 1rem;
-	// left: 1rem;
+	top: 80%;
+	left: 1rem;
 	display: inline-block;
+	// 防止选中
+	user-select: none;
+	-webkit-user-select: none; /* Safari */
 	.music-card-content {
 		position: relative;
 		display: flex;
@@ -221,6 +225,9 @@ onMounted(() => {
 				width: 80px;
 				height: 80px;
 				border-radius: 50%;
+				// 防止选中
+				user-select: none;
+				-webkit-user-select: none; /* Safari */
 			}
 		}
 		.right {
@@ -286,6 +293,5 @@ onMounted(() => {
 	opacity: 0.5; /* 降低拖拽中元素的透明度 */
 	cursor: grabbing; /* 改变鼠标指针为抓取手型 */
 	/* 添加其他样式以突出显示拖拽中的元素 */
-	user-select: none;
 }
 </style>
