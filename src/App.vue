@@ -1,13 +1,11 @@
 <template>
-<div>
-  <MusicCard/>
-</div>
+	<div>
+		<MusicCard />
+	</div>
 </template>
 
 <script setup>
-import MusicCard from './components/music/index.vue'
+import MusicCard from './components/music/index.vue';
 </script>
 
-<style scoped>
-
-</style>
+<style scoped lang="scss"></style>
