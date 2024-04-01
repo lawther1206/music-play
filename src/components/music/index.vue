@@ -31,60 +31,58 @@
 </template>
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
+
 const vDrag = {
-	// 在绑定元素的父组件
-	// 及他自己的所有子节点都挂载完成后调用
 	mounted(el) {
 		const moveDOm = el.getElementsByClassName('left-img')[0];
-		// 确保元素只能在视口内拖拽
-		let maxLeft = document.documentElement.clientWidth - el.clientWidth;
-		let maxTop = document.documentElement.clientHeight - el.clientHeight;
-		// 鼠标事件
-		moveDOm.onmousedown = function (e) {
-			// 添加样式
-			el.classList.add('dragging');
-			// 鼠标按下，计算当前元素距离可视区的距离
-			let offsetX = e.clientX - el.offsetLeft;
-			let offsetY = e.clientY - el.offsetTop;
-			document.onmousemove = function (e) {
-				// 计算移动的距离
-				let moveX = e.clientX - offsetX;
-				let moveY = e.clientY - offsetY;
-				// 限制边界
-				moveX = Math.max(Math.min(moveX, maxLeft), 0);
-				moveY = Math.max(Math.min(moveY, maxTop), 0);
-				// 移动当前元素
-				el.style.left = moveX + 'px';
-				el.style.top = moveY + 'px';
-			};
+		let x = 0; // 记录元素拖拽时的初始 x 轴位置
+		let y = 0; // 记录元素拖拽时的初始 y 轴位置
 
-			document.onmouseup = function (e) {
-				el.classList.remove('dragging');
-				document.onmousemove = null;
-				document.onmouseup = null;
-			};
-			// 防止粘粘
+		// 移动端触摸事件处理
+		moveDOm.ontouchstart = function (event) {
+			// 如果是移动端触摸事件，记录触摸点与元素左上角的偏移量
+			x = event.touches[0].pageX - el.getBoundingClientRect().left;
+			y = event.touches[0].pageY - el.getBoundingClientRect().top;
+			// 添加移动端触摸移动事件处理器
+			document.ontouchmove = handleMove;
+		};
+
+		// PC 端鼠标事件处理
+		moveDOm.onmousedown = function (event) {
+			// 如果是 PC 端鼠标事件，记录鼠标点击点与元素左上角的偏移量
+			x = event.clientX - el.getBoundingClientRect().left;
+			y = event.clientY - el.getBoundingClientRect().top;
+			// 添加 PC 端鼠标移动事件处理器
+			document.onmousemove = handleMove;
 			return false;
 		};
-		// 移动端
-		moveDOm.ontouchstart = function (event) {
-			const { pageX, pageY } = event.touches[0];
-			let offsetX = pageX - el.offsetLeft;
-			let offsetY = pageY - el.offsetTop;
-			document.ontouchmove = function (e) {
-				// 移动距离
-				let left = e.touches[0].pageX - offsetX;
-				let top = e.touches[0].pageY - offsetY;
-				// 限制范围
-				left = Math.max(Math.min(left, maxLeft), 0);
-				top = Math.max(Math.min(top, maxTop), 0);
-				el.style.left = left + 'px';
-				el.style.top = top + 'px';
-			};
-		};
 
-		el.ontouchend = function () {
-			document.ontouchmove = null;
+		// 通用移动事件处理函数
+		function handleMove(event) {
+			// 计算新的位置
+			let left, top;
+			if (event.touches) {
+				// 触摸事件
+				left = event.touches[0].pageX - x;
+				top = event.touches[0].pageY - y;
+			} else {
+				// 鼠标事件
+				left = event.clientX - x;
+				top = event.clientY - y;
+			}
+			// 确保元素在页面范围内
+			let maxLeft = document.documentElement.clientWidth - el.clientWidth;
+			let maxTop = document.documentElement.clientHeight - el.clientHeight;
+			left = Math.max(Math.min(left, maxLeft), 0);
+			top = Math.max(Math.min(top, maxTop), 0);
+			// 使用 translate 方式移动元素
+			el.style.transform = `translate(${left}px, ${top}px)`;
+		}
+
+		// 添加触摸/鼠标释放事件处理器
+		document.ontouchend = document.onmouseup = function () {
+			// 清除移动事件处理器
+			document.ontouchmove = document.onmousemove = null;
 		};
 	},
 };
@@ -199,8 +197,8 @@ onMounted(() => {
 <style scoped lang="scss">
 .music-card {
 	position: fixed;
-	top: 80%;
-	left: 1rem;
+	// top: 80%;
+	// left: 1rem;
 	display: inline-block;
 	// 防止选中
 	user-select: none;
