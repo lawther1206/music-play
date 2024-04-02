@@ -198,6 +198,7 @@ const init = async () => {
 		let preview = await import(`../../assets/image/${el.key}.jpg`);
 		el.preview = preview.default;
 	}
+	console.log(songs.value,"songs.value");
 	audioTag.value.src = songs.value[state.currentSongIndex].url;
 };
 
