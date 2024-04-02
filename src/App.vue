@@ -22,7 +22,6 @@ const Export = defineAsyncComponent(() => import('./components/export/index.vue'
 const Scroll = defineAsyncComponent(() => import('./components/scroll/index.vue'));
 
 import { exportInfo, navData } from '@/utils/commData';
-
 const state = reactive({
 	musicShow: true,
 	scrollShow: false,
@@ -31,7 +30,7 @@ const state = reactive({
 const exportRef = ref(null);
 const imgRef = ref(null);
 const scrollRef = ref(null);
-
+// 处理
 const showType = (type) => {
 	switch (type) {
 		case 'music':
@@ -55,9 +54,7 @@ const exportHandler = (params) => {
 	exportRef.value?.closeDialogEnd(true);
 };
 
-const imgHandler = (params) => {
-	console.log(params, 'params');
-};
+const imgHandler = (params) => {};
 </script>
 
 <style scoped lang="scss"></style>
