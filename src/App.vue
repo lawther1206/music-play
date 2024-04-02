@@ -17,10 +17,10 @@
 <script setup>
 import { reactive, ref, defineAsyncComponent } from 'vue';
 // 动态引入
-const MusicCard = defineAsyncComponent(() => import('@/components/music/index.vue'));
-const ImgUpdate = defineAsyncComponent(() => import('@/components/imgUpdate/index.vue'));
-const Export = defineAsyncComponent(() => import('@/components/export/index.vue'));
-const Scroll = defineAsyncComponent(() => import('@/components/scroll/index.vue'));
+import MusicCard from '@/components/music/index.vue';
+import ImgUpdate from '@/components/imgUpdate/index.vue';
+import Export from '@/components/export/index.vue';
+import Scroll from '@/components/scroll/index.vue';
 
 import { exportInfo, navData } from '@/utils/commData';
 const state = reactive({
@@ -55,8 +55,7 @@ const exportHandler = (params) => {
 	exportRef.value?.closeDialogEnd(true);
 };
 
-const imgHandler = (params) => {
-};
+const imgHandler = (params) => {};
 </script>
 
 <style scoped lang="scss"></style>
