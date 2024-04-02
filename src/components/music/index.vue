@@ -1,14 +1,12 @@
 <template>
-	<el-card class="music-card" v-drag="{ initX: '1rem', initY: '80vh' }">
+	<el-card class="music-card" v-drag v-if="songs.length > 0">
 		<div class="music-card-content">
 			<div class="del-icon" @click="cardClose" v-show="isCard">×</div>
 			<div class="left" @click="cardShow">
 				<el-image :class="{ paused: !state.isStop }" class="left-img" :src="songs[state.currentSongIndex].preview"></el-image>
 			</div>
 			<div class="right" v-show="isCard">
-				<div class="right-title">
-					{{ songs[state.currentSongIndex].name }}
-				</div>
+				<div class="right-title">{{ songs[state.currentSongIndex].name }}-{{ songs[state.currentSongIndex].singer }}</div>
 				<div class="right-silde">
 					<div class="right-silde-start">
 						{{ secondsToMinutes(state.currentSongTime) }}
@@ -23,6 +21,22 @@
 					<div @click="play" class="btn-item" v-show="state.isStop">▶️</div>
 					<div @click="pause" class="btn-item" v-show="!state.isStop">⏸️</div>
 					<div @click="nextSong" class="btn-item">⏩</div>
+					<el-popover :width="250" trigger="click" popper-class="my-popover">
+						<template #reference>
+							<div class="btn-item">🆕</div>
+						</template>
+						<div class="list-card">
+							<div class="list-card-title">播放列表({{ songs.length }})</div>
+							<div class="list-card-content">
+								<div class="mask">
+									<div v-for="(item, index) in songs" :key="item.key" class="mask-item" :class="{ active: state.currentSongIndex == index }" @click="activeNext(index)">
+										<span class="mask-item-left"> {{ item.name }}</span>
+										<span class="mask-item-right">{{ item.singer }}</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</el-popover>
 				</div>
 			</div>
 			<audio ref="audioTag" @loadedmetadata="getDuration" @timeupdate="getCurrentTime" @ended="nextSong"></audio>
@@ -31,6 +45,7 @@
 </template>
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
+import { getMusic } from '@/utils/commData';
 
 const vDrag = {
 	mounted(el) {
@@ -38,7 +53,7 @@ const vDrag = {
 		let x = 0; // 记录元素拖拽时的初始 x 轴位置
 		let y = 0; // 记录元素拖拽时的初始 y 轴位置
 		// 初始化位置
-		el.style.transform = 'translate(12px, 80vh)';
+		// el.style.transform = "translate(12px, 80vh)";
 		// 移动端触摸事件处理
 		moveDOm.ontouchstart = function (event) {
 			// 如果是移动端触摸事件，记录触摸点与元素左上角的偏移量
@@ -77,7 +92,9 @@ const vDrag = {
 			left = Math.max(Math.min(left, maxLeft), 0);
 			top = Math.max(Math.min(top, maxTop), 0);
 			// 使用 translate 方式移动元素
-			el.style.transform = `translate(${left}px, ${top}px)`;
+			el.style.left = left + 'px';
+			el.style.top = top + 'px';
+			//   el.style.transform = `translate(${left}px, ${top}px)`;
 		}
 
 		// 添加触摸/鼠标释放事件处理器
@@ -88,20 +105,7 @@ const vDrag = {
 	},
 };
 
-const songs = ref([
-	{
-		key: 'haqs',
-		name: '黑暗骑士-五月天',
-		url: '',
-		preview: '',
-	},
-	{
-		key: 'fqxdsws',
-		name: '父亲写的散文诗-刘乐瑶',
-		url: '',
-		preview: '',
-	},
-]);
+const songs = ref([]);
 
 // 播放器DOM
 const audioTag = ref(null);
@@ -150,6 +154,11 @@ const nextSong = () => {
 	playCurrentTrack();
 };
 
+const activeNext = (index) => {
+	state.currentSongIndex = index;
+	playCurrentTrack();
+};
+
 const playCurrentTrack = () => {
 	if (audioTag.value) {
 		state.isStop = false;
@@ -180,6 +189,8 @@ const cardShow = () => {
 };
 
 const init = async () => {
+	let res = await getMusic();
+	songs.value = res.data.result ?? [];
 	for (let i = 0; i < songs.value.length; i++) {
 		let el = songs.value[i];
 		let mp3 = await import(`../../assets/audio/${el.key}.mp3`);
@@ -198,42 +209,51 @@ onMounted(() => {
 <style scoped lang="scss">
 .music-card {
 	position: fixed;
-	// top: 80%;
-	// left: 1rem;
+	top: 70%;
+	left: 1rem;
 	display: inline-block;
 	// 防止选中
 	user-select: none;
-	-webkit-user-select: none; /* Safari */
+	-webkit-user-select: none;
+
+	/* Safari */
 	.music-card-content {
 		position: relative;
 		display: flex;
+
 		.del-icon {
 			position: absolute;
 			right: -10px;
 			top: -18px;
 			cursor: pointer;
 			font-weight: 600;
+
 			&:hover {
 				color: #409eff;
 			}
 		}
+
 		.left {
 			width: 90px;
 			cursor: pointer;
+
 			.left-img {
 				width: 80px;
 				height: 80px;
 				border-radius: 50%;
 				// 防止选中
 				user-select: none;
-				-webkit-user-select: none; /* Safari */
+				-webkit-user-select: none;
+				/* Safari */
 			}
 		}
+
 		.right {
 			width: 150px;
 			display: flex;
 			flex-flow: column;
 			justify-content: space-evenly;
+
 			:deep(.el-slider__button-wrapper) {
 				display: none;
 			}
@@ -243,25 +263,30 @@ onMounted(() => {
 				overflow: hidden;
 				text-overflow: ellipsis;
 				width: 100%;
-				display: flex;
-				justify-content: center;
+				text-align: center;
+				font-size: 14px;
 			}
 
 			.right-silde {
 				display: flex;
 				align-items: center;
+
 				.right-silde-start {
 					margin: 10px 5px;
 				}
+
 				.right-silde-end {
 					margin: 10px 5px;
 				}
 			}
+
 			.btn-list {
+				position: relative;
 				display: flex;
 				justify-content: center;
 				font-size: 22px;
 				margin-left: 5px;
+
 				.btn-item {
 					cursor: pointer;
 					margin-right: 10px;
@@ -289,8 +314,77 @@ onMounted(() => {
 }
 
 .dragging {
-	opacity: 0.5; /* 降低拖拽中元素的透明度 */
-	cursor: grabbing; /* 改变鼠标指针为抓取手型 */
+	opacity: 0.5;
+	/* 降低拖拽中元素的透明度 */
+	cursor: grabbing;
+	/* 改变鼠标指针为抓取手型 */
 	/* 添加其他样式以突出显示拖拽中的元素 */
+}
+
+.list-card {
+	.list-card-title {
+		padding-bottom: 10px;
+		font-size: 14px;
+		color: #e2e2e2;
+	}
+
+	.list-card-content {
+		.mask {
+			width: 100%;
+			height: 200px;
+			overflow: auto;
+			// background: #121212;
+			color: #e2e2e2;
+
+			.mask-item {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				padding: 0 20px;
+				height: 28px;
+				line-height: 28px;
+				overflow: hidden;
+				cursor: pointer;
+
+				&:hover {
+					background-color: rgba(0, 0, 0, 0.3);
+					color: #fff;
+				}
+
+				.mask-item-left {
+					float: left;
+				}
+
+				.mask-item-right {
+					float: right;
+				}
+			}
+		}
+
+		.active {
+			background-color: rgba(0, 0, 0, 0.3);
+
+			&::after {
+				content: '🔻';
+				position: absolute;
+				left: 12px;
+				transform: rotate(30deg);
+				margin-top: 1px;
+				font-size: 13px;
+			}
+		}
+	}
+}
+</style>
+
+<style>
+.my-popover.el-popover {
+	background-color: rgba(0, 0, 0, 0.7) !important;
+	border: 1px solid rgba(0, 0, 0, 0.7) !important;
+}
+
+.my-popover.el-popper.is-light .el-popper__arrow:before {
+	background-color: rgba(0, 0, 0, 0.7) !important;
+	border: none;
 }
 </style>
