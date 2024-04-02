@@ -15,7 +15,6 @@
 </template>
 
 <script setup>
-
 import { reactive, ref, defineAsyncComponent } from 'vue';
 const MusicCard = defineAsyncComponent(() => import('./components/music/index.vue'));
 const ImgUpdate = defineAsyncComponent(() => import('./components/imgUpdate/index.vue'));
@@ -25,7 +24,7 @@ const Scroll = defineAsyncComponent(() => import('./components/scroll/index.vue'
 import { exportInfo, navData } from '@/utils/commData';
 
 const state = reactive({
-	musicShow: false,
+	musicShow: true,
 	scrollShow: false,
 });
 
